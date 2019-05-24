@@ -42,7 +42,7 @@ With exception to the service file, which is covered below
 ## The Service ##
 There is a hat.service file located in the root folder.  This file needs to be copied into the systemd service folder
 
-    sudo sp ./hat.service /lib/systemd/system/hat.service
+    sudo cp ./hat.service /lib/systemd/system/hat.service
 
 From there, you will need to set the permissions on the file
 
