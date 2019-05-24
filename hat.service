@@ -1,0 +1,11 @@
+[Unit]
+Description=Hat Service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/PiBTButton/env/bin/python3 /home/pi/PiBTButton/hat.py
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
