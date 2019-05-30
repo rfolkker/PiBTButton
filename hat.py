@@ -5,32 +5,40 @@ import evdev
 import subprocess
 import board
 import busio
-import adafruit_pca9685
-i2c = busio.I2C(board.SCL, board.SDA)
-hat = adafruit_pca9685.PCA9685(i2c, address=0x41)
-hat.frequency = 60
-led_channel = hat.channels[0]
+import datetime
+from adafruit_servokit import ServoKit
+from adafruit_motorkit import MotorKit
+
+servo_kit = ServoKit(channels=8, address=0x41)
+motor_kit = MotorKit()
+
+motor_start = 0
+motor_check = 0
+servo_start = 0
+servo_check = 0
 
 ## kit = ServoKit(channels=8, address=0x41)
 
 def trigger_servo():
-    kit.servo[0].angle = 180
-    kit.continuous_servo[1].throttle = 1
-    time.sleep(5)
-    kit.servo[0].angle = 0
-    kit.continuous_servo[1].throttle = 0
+    servo_kit.servo[0].angle = 180
+    servo_start = datetime.datetime.now()
 
-def brighten_led():
-    # Increase brightness:
-    for i in range(0,0xffff,0xf):
-        led_channel.duty_cycle = i
-    # print("complete")
+def reset_servo():
+    servo_kit.servo[0].angle = 0
+    servo_start = 0
+    servo_end = 0
 
-def darken_led():
-    # Decrease brightness:
-    for i in range(0xffff, 0, -0xf):
-        led_channel.duty_cycle = i
-    # print("complete")
+def trigger_motor():
+    motor_kit.motor2.throttle = 1.0
+    motor_start = datetime.datetime.now()
+
+def reset_motor():
+    motor_kit.motor2.throttle = 0.0
+    motor_start = 0
+    motor_end = 0
+
+motor_kit.motor2.throttle = 0
+servo_kit.servo[0].angle = 0
 
 while(1):
     try:
@@ -44,6 +52,21 @@ while(1):
             # print ("No devices found, try running with sudo")
             sys.exit(1)
 
+        # Check to see if the servo has fired
+        # If it has, make sure it only runs for 10 seconds
+        # if(servo_start != 0):
+        #    servo_check = datetime.datetime.now() - servo_start
+        #    if(servo_check.seconds > 10):
+        #        reset_servo()
+
+        # Check to see if the motor has fired
+        # If it has, make sure it only runs for 10 seconds
+        # if(motor_start != 0):
+        #    motor_check = datetime.datetime.now() - motor_start
+        #    # print("Motor running for "+motor_check.seconds+ " seconds")
+        #    if(motor_check.seconds > 10):
+        #        reset_motor()
+
         for device in devices:
             if device.name == 'AB Shutter 3':
                 # print(device)
@@ -53,10 +76,14 @@ while(1):
                         if event.value == 0:
                             if event.code == 115:
                                 # print("Button1 Pressed")
-                                brighten_led()
+                                trigger_servo()
+                                # print(servo_start)
+                                trigger_motor()
+                                # print(motor_start)
                             if event.code == 28:
+                                reset_servo()
+                                reset_motor()
                                 # print("Button2 Pressed")
-                                darken_led()
     except KeyboardInterrupt:
         # print("Exiting.")
         # sys.exit(1)
